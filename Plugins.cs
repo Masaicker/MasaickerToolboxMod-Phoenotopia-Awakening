@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.4")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.5")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -97,10 +97,20 @@ namespace MasaickerToolbox
     {
         public static float lastJumpPressTime = -1f;
         public static float lastGroundedTime = -1f;
-        // 标记是否是主动跳跃离地（主动跳跃不给土狼时间）
         public static bool leftGroundByJump = false;
-        // 标记是否从冲刺状态被动离地（土狼跳跃时需要执行冲刺跳逻辑）
         public static bool leftGroundFromSprint = false;
+
+        // 冲刺跳公共逻辑：体力消耗、粒子、音效、状态切换
+        public static void DoSprintJump(GaleLogicOne g)
+        {
+            g._UseUpStamina(10.5f);
+            g._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.DOWN, 1);
+            g._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.LEFT, 0);
+            g._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.RIGHT, 0);
+            PT2.sound_g.PlayGlobalCommonSfx(18, 1f, GL.M_RandomPitch(), 1);
+            PT2.sound_g.PlayCommonSfx(166, g._transform.position, 1f, 0f, GL.M_RandomPitch(1f, 0.05f));
+            g._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_LEAPING_STATE);
+        }
     }
 
     // 记录跳跃按键时间（ControlAdapter.Update 没有 new Action，patch 安全）
@@ -191,14 +201,7 @@ namespace MasaickerToolbox
 
                     if (JumpState.leftGroundFromSprint)
                     {
-                        // 冲刺土狼跳：消耗体力、特效、音效，进入 Leap 状态
-                        __instance._UseUpStamina(10.5f);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.DOWN, 1);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.LEFT, 0);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.RIGHT, 0);
-                        PT2.sound_g.PlayGlobalCommonSfx(18, 1f, GL.M_RandomPitch(), 1);
-                        PT2.sound_g.PlayCommonSfx(166, __instance._transform.position, 1f, 0f, GL.M_RandomPitch(1f, 0.05f));
-                        __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_LEAPING_STATE);
+                        JumpState.DoSprintJump(__instance);
                         JumpState.leftGroundFromSprint = false;
                         if (Plugin.DebugLog.Value)
                             Plugin.Log.LogInfo("[Coyote] Sprint jump triggered! timeSinceGround=" + timeSinceGrounded.ToString("F3"));
@@ -229,13 +232,7 @@ namespace MasaickerToolbox
 
                     if (Plugin.SprintHoldEnabled.Value && __instance._control.SPRINT_HELD)
                     {
-                        __instance._UseUpStamina(10.5f);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.DOWN, 1);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.LEFT, 0);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.RIGHT, 0);
-                        PT2.sound_g.PlayGlobalCommonSfx(18, 1f, GL.M_RandomPitch(), 1);
-                        PT2.sound_g.PlayCommonSfx(166, __instance._transform.position, 1f, 0f, GL.M_RandomPitch(1f, 0.05f));
-                        __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_LEAPING_STATE);
+                        JumpState.DoSprintJump(__instance);
                         if (Plugin.DebugLog.Value)
                             Plugin.Log.LogInfo("[JumpBuffer] Sprint jump triggered in InAir! timeSinceJump=" + timeSinceJump.ToString("F3"));
                     }
@@ -291,13 +288,7 @@ namespace MasaickerToolbox
 
                     if (Plugin.SprintHoldEnabled.Value && __instance._control.SPRINT_HELD)
                     {
-                        __instance._UseUpStamina(10.5f);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.DOWN, 1);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.LEFT, 0);
-                        __instance._EmitDustOrWaterParticle(0f, -0.75f, DIRECTION.RIGHT, 0);
-                        PT2.sound_g.PlayGlobalCommonSfx(18, 1f, GL.M_RandomPitch(), 1);
-                        PT2.sound_g.PlayCommonSfx(166, __instance._transform.position, 1f, 0f, GL.M_RandomPitch(1f, 0.05f));
-                        __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_LEAPING_STATE);
+                        JumpState.DoSprintJump(__instance);
                         if (Plugin.DebugLog.Value)
                             Plugin.Log.LogInfo("[JumpBuffer] Sprint jump triggered in Leap! timeSinceJump=" + timeSinceJump.ToString("F3"));
                     }
@@ -461,9 +452,18 @@ namespace MasaickerToolbox
             if (!Plugin.SprintHoldEnabled.Value) return;
             if (!__instance._control.SPRINT_HELD || __instance._control.SPRINT_PRESSED) return;
 
-            // 只在 _STATE_Default（站立/行走）时伪造按下，让原版逻辑自然激活冲刺
             if (__instance.StateFn == __instance._STATE_Default)
             {
+                // 同帧跳跃+冲刺：直接执行冲刺跳，避免被 Update 中普通跳抢先（JUMP_PRESSED 1678行 先于 SPRINT_PRESSED 1955行）
+                if (__instance._control.JUMP_PRESSED && __instance._EnoughStamina())
+                {
+                    __instance.velocity.y = __instance.jump_velocity;
+                    JumpState.DoSprintJump(__instance);
+                    JumpState.leftGroundByJump = true;
+                    __instance._control.JUMP_PRESSED = false;
+                    return;
+                }
+
                 __instance._control.SPRINT_PRESSED = true;
                 __instance._control.num_frames_since_last_SPRINT_PRESSED = 0;
             }
