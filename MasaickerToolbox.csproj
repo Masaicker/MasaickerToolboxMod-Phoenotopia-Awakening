@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net35</TargetFramework>
+        <Nullable>disable</Nullable>
+        <Version>1.0.4</Version>
+        <AssemblyVersion>1.0.4</AssemblyVersion>
+        <FileVersion>1.0.4</FileVersion>
+        <Product>MasaickerToolbox</Product>
+        <Company>MHZ</Company>
+        <Copyright>Copyright © 2026 Masaicker</Copyright>
+        <Author>Masaicker</Author>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PAPath Condition="'$(PAPath)' == ''">E:\Steam\steamapps\common\Phoenotopia Awakening\PhoenotopiaAwakening_Data\Managed\</PAPath>
+        <BepPath Condition="'$(BepPathPath)' == ''">E:\Steam\steamapps\common\Phoenotopia Awakening\BepInEx\core\</BepPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="$(PAPath)Assembly-CSharp.dll" Publicize="true" Private="false" />
+        <Reference Include="$(PAPath)UnityEngine.dll" Private="false" />
+        <Reference Include="$(BepPath)0Harmony.dll" Private="false" />
+        <Reference Include="$(BepPath)BepInEx.dll" Private="false" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,30 @@
+# Changelog
+
+## v1.0.4
+
+- Sprint Hold: Hold sprint key to auto re-activate sprint after interruptions.
+  按住自动冲刺：被打断后自动重新冲刺，无需松开再按。
+- Skid Turn: Press opposite direction during sprint to turn around.
+  滑停转向：冲刺中按反方向可转向继续冲刺。
+
+## v1.0.3
+
+- Aerial Attack Startup Skip: Reduces aerial attack windup animation for faster hit confirmation. Configurable.
+  空中攻击前摇跳过：减少空中攻击起手动画延迟，让攻击更快命中。可调节。
+
+## v1.0.2
+
+- Add Stamina Cooldown Multiplier.
+  增加耐力冷却倍率。
+
+## v1.0.1
+
+- Air Turn: Allow turning mid-air in InAir, InAirCarry and Hovering states.
+  空中转身：允许在普通空中、搬物空中、火箭靴状态下按方向键转身。
+- Fix: Coyote Time from sprint now correctly enters Leap state instead of breaking sprint.
+  修复：冲刺状态触发土狼时间现在正确进入冲刺跳状态，不再打断冲刺。
+
+## v1.0.0
+
+- Initial release: Jump Buffer, Coyote Time, No Sprint Inertia.
+  初始版本：跳跃缓冲、土狼时间、取消奔跑惯性。
