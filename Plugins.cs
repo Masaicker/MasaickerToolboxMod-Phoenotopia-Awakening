@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.5")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.6")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -21,6 +21,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<float> StaminaCooldownMult;
         public static ConfigEntry<float> AerialAtkSkipFrames;
         public static ConfigEntry<bool> SprintHoldEnabled;
+        public static ConfigEntry<bool> DropThroughHeldEnabled;
 
         private void Awake()
         {
@@ -85,6 +86,12 @@ namespace MasaickerToolbox
                 "SprintHold",
                 true,
                 "Sprint Hold - Auto re-activate sprint while holding sprint key - 按住冲刺键自动重激活冲刺（无需松开再按）");
+
+            DropThroughHeldEnabled = Config.Bind(
+                "General",
+                "DropThroughHeld",
+                false,
+                "Drop Through Held - Hold down+jump to continuously fall through drop-through platforms - 长按穿透平台（按住下+跳连续穿过可下跳的平台）");
 
             var harmony = new Harmony("Mhz.masaickertoolbox");
             harmony.PatchAll();
@@ -263,6 +270,15 @@ namespace MasaickerToolbox
                 if (__instance._transform.localScale.x != facing)
                     __instance._transform.localScale = new Vector3(facing, 1f, 1f);
             }
+
+            // 持续穿透单向板：按住下+跳时持续刷新ignore计时器
+            if (Plugin.DropThroughHeldEnabled.Value
+                && __instance.velocity.y <= 0f
+                && (__instance._control.UP_DOWN_AXIS <= -0.95f || __instance._control.CROUCH_HELD)
+                && __instance._control.JUMP_HELD)
+            {
+                __instance._mover2._ignore_owp_time = 0.1f;
+            }
         }
     }
 
@@ -305,6 +321,17 @@ namespace MasaickerToolbox
             }
             return true;
         }
+
+        static void Postfix(GaleLogicOne __instance)
+        {
+            if (Plugin.DropThroughHeldEnabled.Value
+                && __instance.velocity.y <= 0f
+                && (__instance._control.UP_DOWN_AXIS <= -0.95f || __instance._control.CROUCH_HELD)
+                && __instance._control.JUMP_HELD)
+            {
+                __instance._mover2._ignore_owp_time = 0.1f;
+            }
+        }
     }
 
     [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne._STATE_InAirCarry))]
@@ -341,6 +368,14 @@ namespace MasaickerToolbox
                 float facing = __instance._control.LEFT_RIGHT_AXIS > 0f ? 1f : -1f;
                 if (__instance._transform.localScale.x != facing)
                     __instance._transform.localScale = new Vector3(facing, 1f, 1f);
+            }
+
+            if (Plugin.DropThroughHeldEnabled.Value
+                && __instance.velocity.y <= 0f
+                && (__instance._control.UP_DOWN_AXIS <= -0.95f || __instance._control.CROUCH_HELD)
+                && __instance._control.JUMP_HELD)
+            {
+                __instance._mover2._ignore_owp_time = 0.1f;
             }
         }
     }

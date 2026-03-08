@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.6
+
+- Drop Through Held: Hold down+jump to continuously fall through drop-through platforms.
+  长按穿透平台：按住下+跳可连续穿过可下跳的平台，松手即停。
+
+## V1.0.5
+- Fix: Sprint jump occasionally becoming normal jump after landing when both Sprint Hold and Jump Buffer are enabled.
+  修复：同时开启按住冲刺和跳跃缓冲时，冲刺跳落地偶尔变成普通跳的问题。
+
 ## v1.0.4
 
 - Sprint Hold: Hold sprint key to auto re-activate sprint after interruptions.

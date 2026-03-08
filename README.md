@@ -41,6 +41,11 @@
   - 按住冲刺键即可在被打断后自动重新冲刺（攻击、翻滚、落地等）。无需松开再按。附带滑停转向：冲刺中按反方向播放滑停动画后自动转向继续冲刺。
   - Default: `ON` / 默认：开启
 
+- **Drop Through Held / 长按穿透平台**
+  - Hold down+jump to continuously fall through drop-through platforms instead of landing on each one. Release to stop.
+  - 按住下+跳可连续穿过可下跳的平台，无需每层重新操作。松手即停。
+  - Default: `OFF` / 默认：关闭
+
 > **Note**: All features are enabled by default and can be toggled or tuned individually in the BepInEx config file.
 > **注意**：所有功能默认开启，可在 BepInEx 配置文件中单独开关或调整参数。
 
