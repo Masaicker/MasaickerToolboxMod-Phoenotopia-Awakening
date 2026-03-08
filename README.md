@@ -74,12 +74,4 @@
 
 ---
 
-## 支持一下｜Support
-如果你觉得这个项目对你有帮助，欢迎在 Ko-fi 给我买杯咖啡 ☕  
-If you found this project useful, you’re welcome to buy me a coffee on Ko-fi ☕
 
-<p>
-  <a href="https://ko-fi.com/masaicker">
-    <img src="https://cdn.prod.website-files.com/5c14e387dab576fe667689cf/670f5a0171bfb928b21a7e00_support_me_on_kofi_beige.png" alt="Buy me a coffee" width="200">
-  </a>
-</p>
