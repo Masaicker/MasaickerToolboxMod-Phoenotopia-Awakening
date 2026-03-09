@@ -431,13 +431,13 @@ namespace MasaickerToolbox
         static void Postfix(GaleLogicOne __instance)
         {
             float skip = Plugin.AerialAtkSkipFrames.Value;
-            if (skip <= 0f) return;
+            if (skip <= 0f || __instance._anim.GetInteger(__instance.anim_state) != 19) return;
 
             var stateInfo = __instance._anim.GetCurrentAnimatorStateInfo(0);
             if (stateInfo.normalizedTime < skip)
                 __instance._anim.speed = 10f;
             else if (__instance._anim.speed > 5f)
-                __instance._anim.speed = 1.35f; // 原版 ATK_FAIR 的 speed
+                __instance._anim.speed = 1.35f;
         }
     }
 
@@ -447,13 +447,13 @@ namespace MasaickerToolbox
         static void Postfix(GaleLogicOne __instance)
         {
             float skip = Plugin.AerialAtkSkipFrames.Value;
-            if (skip <= 0f) return;
+            if (skip <= 0f || __instance._anim.GetInteger(__instance.anim_state) != 19) return;
 
             var stateInfo = __instance._anim.GetCurrentAnimatorStateInfo(0);
             if (stateInfo.normalizedTime < skip)
                 __instance._anim.speed = 10f;
             else if (__instance._anim.speed > 5f)
-                __instance._anim.speed = 1.35f; // 原版 ATK_LEAP_FAIR 的 speed
+                __instance._anim.speed = 1.35f;
         }
     }
 
