@@ -22,6 +22,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<float> AerialAtkSkipFrames;
         public static ConfigEntry<bool> SprintHoldEnabled;
         public static ConfigEntry<bool> DropThroughHeldEnabled;
+        public static ConfigEntry<bool> HoverGrabEnabled;
 
         private void Awake()
         {
@@ -44,6 +45,12 @@ namespace MasaickerToolbox
                 "JumpBufferWindow",
                 0.1f,
                 "Jump Buffer Window (seconds) - 跳跃缓冲窗口（秒）");
+
+            HoverGrabEnabled = Config.Bind(
+                "Jump",
+                "HoverGrab",
+                true,
+                "Hover Grab - Use Grab key instead of Jump to activate hover (rocket boots) mid-air, preventing conflict with Jump Buffer - 抓取键悬浮（空中用抓取键代替跳跃键激活火箭靴悬浮，避免与跳跃缓冲冲突）");
 
             CoyoteTimeEnabled = Config.Bind(
                 "Jump",
@@ -381,37 +388,23 @@ namespace MasaickerToolbox
     }
 
     [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne._STATE_Hovering))]
-    public class JumpBufferHovering
+    public class HoveringPatch
     {
-        static bool Prefix(GaleLogicOne __instance)
-        {
-            if (!Plugin.JumpBufferEnabled.Value)
-                return true;
+        static bool _savedJumpHeld;
 
-            if (__instance._wait_time > 0.05f && __instance._mover2.collision_info.below)
-            {
-                float timeSinceJump = Time.time - JumpState.lastJumpPressTime;
-                if (timeSinceJump <= Plugin.JumpBufferWindow.Value)
-                {
-                    JumpState.lastJumpPressTime = -1f;
-                    __instance.velocity.y = __instance.jump_velocity;
-                    PT2.sound_g.PlayGlobalCommonSfx(18, 1f, GL.M_RandomPitch(1.4f, 0.05f), 1);
-                    if (__instance._liftable_mover.enabled)
-                        __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_CARRY);
-                    else
-                        __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR);
-                    JumpState.leftGroundByJump = true;
-                    if (Plugin.DebugLog.Value)
-                        Plugin.Log.LogInfo("[JumpBuffer] Triggered in Hovering! timeSinceJump=" + timeSinceJump.ToString("F3"));
-                    return false;
-                }
-                JumpState.leftGroundByJump = false;
-            }
-            return true;
+        static void Prefix(GaleLogicOne __instance)
+        {
+            // 用 Grab 维持悬浮：按住 Grab 时临时伪装 JUMP_HELD
+            _savedJumpHeld = __instance._control.JUMP_HELD;
+            if (Plugin.HoverGrabEnabled.Value && __instance._control.GRAB_HELD)
+                __instance._control.JUMP_HELD = true;
         }
 
         static void Postfix(GaleLogicOne __instance)
         {
+            if (Plugin.HoverGrabEnabled.Value)
+                __instance._control.JUMP_HELD = _savedJumpHeld;
+
             if (Plugin.AirTurnEnabled.Value && Mathf.Abs(__instance._control.LEFT_RIGHT_AXIS) > 0.5f)
             {
                 float facing = __instance._control.LEFT_RIGHT_AXIS > 0f ? 1f : -1f;
@@ -504,4 +497,83 @@ namespace MasaickerToolbox
             }
         }
     }
+
+    // 悬浮改用 Grab 键触发，解决与跳跃缓冲的冲突
+    static class HoverGrabState
+    {
+        public static bool grabRocketPress;
+        public static float grabRocketBufferTime;
+        public static bool savedHoverFlag;
+    }
+
+    [HarmonyPatch(typeof(GaleLogicOne), "Update")]
+    class HoverGrabPatch
+    {
+        static void Prefix(GaleLogicOne __instance)
+        {
+            if (!Plugin.HoverGrabEnabled.Value)
+                return;
+
+            // Grab 键触发悬浮准备
+            if (__instance._control.GRAB_PRESSED
+                && __instance.DEBUG_CAN_HOVER
+                && __instance._AttemptFlyOutOfAir())
+            {
+                HoverGrabState.grabRocketPress = true;
+                HoverGrabState.grabRocketBufferTime = 0f;
+            }
+
+            // 搬运空中按 Grab 直接进入悬浮搬运（原版1850行的替代）
+            if (__instance._control.GRAB_PRESSED
+                && __instance.DEBUG_CAN_HOVER
+                && __instance.StateFn == __instance._STATE_InAirCarry
+                && __instance._EnoughStamina())
+            {
+                __instance._GoToState(GaleLogicOne.GALE_STATE.HOVERING_CARRY);
+            }
+
+            // Grab 持续按住：累积计时器，满足条件进入悬浮
+            if (HoverGrabState.grabRocketPress && __instance._control.GRAB_HELD)
+            {
+                HoverGrabState.grabRocketBufferTime += Time.deltaTime;
+                if (HoverGrabState.grabRocketBufferTime > 0.05f
+                    && __instance.DEBUG_CAN_HOVER
+                    && __instance._AttemptFlyOutOfAir()
+                    && __instance._EnoughStamina())
+                {
+                    __instance._GoToState(GaleLogicOne.GALE_STATE.HOVERING);
+                    HoverGrabState.grabRocketPress = false;
+                }
+            }
+            else
+            {
+                HoverGrabState.grabRocketPress = false;
+            }
+
+            // 临时禁用原版跳跃触发悬浮 + 清除原版残留状态
+            HoverGrabState.savedHoverFlag = __instance.DEBUG_CAN_HOVER;
+            __instance.DEBUG_CAN_HOVER = false;
+            __instance._discrete_rocket_press = false;
+            if (Plugin.DebugLog.Value && __instance._control.JUMP_PRESSED)
+                Plugin.Log.LogInfo("[HoverGrab] Prefix executed: savedFlag=" + HoverGrabState.savedHoverFlag + " state=" + __instance.StateFn.Method.Name);
+        }
+
+        static void Postfix(GaleLogicOne __instance)
+        {
+            if (!Plugin.HoverGrabEnabled.Value)
+                return;
+
+            __instance.DEBUG_CAN_HOVER = HoverGrabState.savedHoverFlag;
+        }
+    }
+
+    // TODO: 测试用，测完删除 - 强制解锁火箭靴
+    // [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne.EnableAbilitiesBasedOnInv))]
+    // class DebugUnlockHover
+    // {
+    //     static void Prefix(ref int[] status_inv)
+    //     {
+    //         status_inv[32] = 34;
+    //     }
+    // }
 }

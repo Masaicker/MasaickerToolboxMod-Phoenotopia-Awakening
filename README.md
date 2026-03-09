@@ -46,6 +46,11 @@
   - 按住下+跳可连续穿过可下跳的平台，无需每层重新操作。松手即停。
   - Default: `OFF` / 默认：关闭
 
+- **Hover Grab / 悬浮改键**
+  - Use Grab key instead of Jump to activate and maintain hover (rocket boots) mid-air. Prevents conflict with Jump Buffer — no more accidental hover when buffering a jump near landing.
+  - 空中使用抓取键替代跳跃键触发和维持悬浮（火箭靴）。避免与跳跃缓冲冲突——落地前缓冲跳跃不再误触悬浮。
+  - Default: `ON` / 默认：开启
+
 > **Note**: All features are enabled by default and can be toggled or tuned individually in the BepInEx config file.
 > **注意**：所有功能默认开启，可在 BepInEx 配置文件中单独开关或调整参数。
 

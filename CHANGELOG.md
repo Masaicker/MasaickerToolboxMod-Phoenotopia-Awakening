@@ -4,6 +4,8 @@
 
 - Drop Through Held: Hold down+jump to continuously fall through drop-through platforms.
   长按穿透平台：按住下+跳可连续穿过可下跳的平台，松手即停。
+- Hover Grab: Use Grab key instead of Jump to activate hover mid-air, preventing conflict with Jump Buffer.
+  悬浮改键：空中使用抓取键替代跳跃键触发悬浮，避免与跳跃缓冲冲突。
 
 ## V1.0.5
 - Fix: Sprint jump occasionally becoming normal jump after landing when both Sprint Hold and Jump Buffer are enabled.
