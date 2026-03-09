@@ -1,4 +1,4 @@
-我[size=6][b]MasaickerToolbox - Jump Enhancement & QoL MOD[/b][/size]
+[size=6][b]MasaickerToolbox - Jump Enhancement & QoL MOD[/b][/size]
 
 
 [quote]A BepInEx plugin that improves jump responsiveness and movement feel.
@@ -34,3 +34,7 @@ Use Grab key instead of Jump to activate and maintain hover (rocket boots) mid-a
 [list]
 [*]BepInEx 5.x
 [/list]
+
+[size=5][b]Source Code / 源码[/b][/size]
+
+[url=https://github.com/Masaicker/MasaickerToolboxMod-Phoenotopia-Awakening]GitHub[/url]
