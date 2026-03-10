@@ -62,7 +62,7 @@ namespace MasaickerToolbox
             CoyoteTimeWindow = Config.Bind(
                 "Jump",
                 "CoyoteTimeWindow",
-                0.08f,
+                0.1f,
                 "Coyote Time Window (seconds) - 土狼时间窗口（秒）");
 
             DebugLog = Config.Bind(
