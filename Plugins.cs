@@ -587,13 +587,14 @@ namespace MasaickerToolbox
         }
     }
 
-    // TODO: 测试用，测完删除 - 强制解锁火箭靴
+    // TODO: 测试用，测完删除 - 强制解锁头锤和悬浮
     // [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne.EnableAbilitiesBasedOnInv))]
-    // class DebugUnlockHover
+    // class DebugUnlockAbilities
     // {
     //     static void Prefix(ref int[] status_inv)
     //     {
-    //         status_inv[32] = 34;
+    //         status_inv[6] = 15;   // 头锤
+    //         status_inv[32] = 34;  // 悬浮（火箭靴）
     //     }
     // }
 }
