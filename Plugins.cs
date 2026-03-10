@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.6")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.7")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -23,6 +23,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<bool> SprintHoldEnabled;
         public static ConfigEntry<bool> DropThroughHeldEnabled;
         public static ConfigEntry<bool> HoverGrabEnabled;
+        public static ConfigEntry<bool> LeapBreakEnabled;
 
         private void Awake()
         {
@@ -99,6 +100,12 @@ namespace MasaickerToolbox
                 "DropThroughHeld",
                 false,
                 "Drop Through Held - Hold down+jump to continuously fall through drop-through platforms - 长按穿透平台（按住下+跳连续穿过可下跳的平台）");
+
+            LeapBreakEnabled = Config.Bind(
+                "General",
+                "LeapBreak",
+                false,
+                "Leap Break - Press opposite direction mid-air to exit sprint jump - 冲刺跳脱离（空中按反方向脱离冲刺跳状态）");
 
             var harmony = new Harmony("Mhz.masaickertoolbox");
             harmony.PatchAll();
@@ -331,6 +338,19 @@ namespace MasaickerToolbox
 
         static void Postfix(GaleLogicOne __instance)
         {
+            // 冲刺跳脱离：反方向输入立即切换为普通空中状态
+            if (Plugin.LeapBreakEnabled.Value)
+            {
+                float facing = __instance._transform.localScale.x;
+                float input = __instance._control.LEFT_RIGHT_AXIS;
+
+                if (facing * input < -0.5f)
+                {
+                    __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR);
+                }
+            }
+
+            // 长按穿透平台
             if (Plugin.DropThroughHeldEnabled.Value
                 && __instance.velocity.y <= 0f
                 && (__instance._control.UP_DOWN_AXIS <= -0.95f || __instance._control.CROUCH_HELD)

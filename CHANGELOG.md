@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.7
+
+- Leap Break: Press opposite direction during sprint jump to exit to normal air state.
+  冲刺跳脱离：空中按反方向脱离冲刺跳状态，恢复空中操控。
+
 ## v1.0.6
 
 - Drop Through Held: Hold down+jump to continuously fall through drop-through platforms.

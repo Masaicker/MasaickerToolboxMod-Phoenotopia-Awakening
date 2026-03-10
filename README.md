@@ -51,6 +51,11 @@
   - 空中使用抓取键替代跳跃键触发和维持悬浮（火箭靴）。避免与跳跃缓冲冲突——落地前缓冲跳跃不再误触悬浮。
   - Default: `ON` / 默认：开启
 
+- **Leap Break / 冲刺跳脱离**
+  - Press opposite direction during sprint jump to immediately exit to normal air state, regaining full aerial control.
+  - 冲刺跳空中按反方向立即切换为普通空中状态，恢复全部空中操控。
+  - Default: `OFF` / 默认：关闭
+
 > **Note**: All features are enabled by default and can be toggled or tuned individually in the BepInEx config file.
 > **注意**：所有功能默认开启，可在 BepInEx 配置文件中单独开关或调整参数。
 
