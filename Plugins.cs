@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.7")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.8")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -24,6 +24,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<bool> DropThroughHeldEnabled;
         public static ConfigEntry<bool> HoverGrabEnabled;
         public static ConfigEntry<bool> LeapBreakEnabled;
+        public static ConfigEntry<bool> FastSaveWakeEnabled;
 
         private void Awake()
         {
@@ -106,6 +107,12 @@ namespace MasaickerToolbox
                 "LeapBreak",
                 false,
                 "Leap Break - Press opposite direction mid-air to exit sprint jump - 冲刺跳脱离（空中按反方向脱离冲刺跳状态）");
+
+            FastSaveWakeEnabled = Config.Bind(
+                "General",
+                "FastSaveWake",
+                true,
+                "Fast Save & Wake - Speed up save animation and wake-up sequence - 快速存档与起床（加速存档动画和起床流程）");
 
             var harmony = new Harmony("Mhz.masaickertoolbox");
             harmony.PatchAll();
@@ -597,4 +604,89 @@ namespace MasaickerToolbox
     //         status_inv[32] = 34;  // 悬浮（火箭靴）
     //     }
     // }
+
+    // 快速起床：跳过起床动画等待
+    [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne._CanExitSleepingState))]
+    class FastWakeCanExitPatch
+    {
+        static void Prefix(GaleLogicOne __instance)
+        {
+            if (!Plugin.FastSaveWakeEnabled.Value) return;
+
+            // 读档起床：_misc_count == 2 时伪造时间已到，让原版推进到 3
+            if (__instance._misc_count == 2)
+                __instance._wait_time = 999f;
+        }
+
+        static void Postfix(GaleLogicOne __instance, ref bool __result)
+        {
+            if (!Plugin.FastSaveWakeEnabled.Value) return;
+
+            // 床上睡觉：_misc_count == 1 时直接返回 true（跳过 4.8 秒等待）
+            if (__instance._misc_count == 1)
+                __result = true;
+        }
+    }
+
+    // 快速起床：跳过读档起床的等待（_misc_count == 3）+ 跳起
+    [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne._STATE_Sleeping))]
+    class FastWakeStatePatch
+    {
+        static void Postfix(GaleLogicOne __instance)
+        {
+            if (!Plugin.FastSaveWakeEnabled.Value) return;
+
+            if (__instance._misc_count == 3)
+            {
+                // 立即进入 DEFAULT
+                __instance._wait_time = 999f;
+                // 起床跳起（与床上起床行为统一）
+                __instance.velocity.y = __instance.jump_velocity;
+            }
+        }
+    }
+
+    // 快速存档：拦截存档点NPC交互，跳过整个对话流程，直接保存
+    // 原版流程：NpcInteract → StartCommand(SAVE_GAME) → is_directing=true锁人
+    //   → SAVE action → SaveGame() → 动画2-3秒 → fx效果 → AUTO_CLOSE等几秒 → 释放
+    // MOD：直接保存数据 + 播放音效 + 显示文本（不锁人），整个过程瞬间完成
+    [HarmonyPatch(typeof(NpcLogic), nameof(NpcLogic.NpcInteract))]
+    class FastSavePatch
+    {
+        static bool Prefix(NpcLogic __instance)
+        {
+            if (!Plugin.FastSaveWakeEnabled.Value) return true;
+            // 只拦截存档点NPC（speech_id 为 SAVE_GAME）
+            if (__instance._speech_ids_string != "SAVE_GAME") return true;
+
+            // 保存数据（复制 SaveGame 核心逻辑，跳过动画和锁定）
+            var sf = PT2.save_file;
+            sf.DEBUG_save_room = LevelBuildLogic.level_name;
+            int idx = SaveFile.save_file_index;
+            string filename;
+            string data;
+            if (idx == 0)      { filename = "file_0"; data = SaveFile.file_0_string_data = sf._NS_CompactSaveDataAsString(); }
+            else if (idx == 1) { filename = "file_1"; data = SaveFile.file_1_string_data = sf._NS_CompactSaveDataAsString(); }
+            else if (idx == 2) { filename = "file_2"; data = SaveFile.file_2_string_data = sf._NS_CompactSaveDataAsString(); }
+            else if (idx == 3) { filename = "file_3"; data = SaveFile.file_3_string_data = sf._NS_CompactSaveDataAsString(); }
+            else               { filename = "settings"; data = SaveFile.settings = sf._NS_CompactSaveDataAsString(); }
+            PT2.save_data_handler.save(data, filename);
+
+            // 音效
+            PT2.sound_g.PlayCommonSfx(248, Vector3.zero, 1f, 0f, 1.3f, 0.15f);
+            PT2.sound_g.PlayGlobalCommonSfx(190, 1f, 1f, 2);
+            // 闪屏
+            PT2.screen_covers.HazeScreen("ffffff", 0.3f, 0.2f, 0f);
+            // 显示"已保存"文本，不锁人
+            PT2.director.StartCommand(DB.GetLine("SAVE_GAME_TEXT"), null, false);
+            // 短暂禁用菜单
+            PT2.director.DisallowPausingAndMenus(0.5f);
+
+            // 模拟原版 NPC 交互冷却（防止连续触发）
+            __instance.gameObject.layer = GL.num_layer_IGNORE;
+            __instance.Invoke(nameof(NpcLogic._ReEnableInteraction), 2f);
+
+            return false;
+        }
+    }
 }
