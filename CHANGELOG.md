@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.8
+
+- Fast Save & Wake: Speed up save point interaction and wake-up sequence.
+  加速存档与起床：加快存档速度，加快起床速度。
+
 ## v1.0.7
 
 - Leap Break: Press opposite direction during sprint jump to exit to normal air state.

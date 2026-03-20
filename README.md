@@ -56,6 +56,11 @@
   - 冲刺跳空中按反方向立即切换为普通空中状态，恢复全部空中操控。
   - Default: `OFF` / 默认：关闭
 
+- **Fast Save & Wake / 加速存档与起床**
+  - Speed up save point interaction and wake-up sequence.
+  - 加快存档速度，加快起床速度。
+  - Default: `ON` / 默认：开启
+
 > **Note**: All features are enabled by default and can be toggled or tuned individually in the BepInEx config file.
 > **注意**：所有功能默认开启，可在 BepInEx 配置文件中单独开关或调整参数。
 
