@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.8")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.9")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -188,8 +188,9 @@ namespace MasaickerToolbox
 
         static void Postfix(GaleLogicOne __instance)
         {
-            // 无惯性
-            if (Plugin.NoInertiaEnabled.Value && !__instance._control.SPRINT_HELD)
+            // 无惯性（仅在仍处于冲刺状态时清零，避免覆盖冲刺内部触发的翻滚等状态转换后的速度）
+            if (Plugin.NoInertiaEnabled.Value && !__instance._control.SPRINT_HELD
+                && __instance.StateFn == __instance._STATE_Sprinting)
             {
                 if (Mathf.Abs(__instance.velocity.x) > 0.01f)
                 {

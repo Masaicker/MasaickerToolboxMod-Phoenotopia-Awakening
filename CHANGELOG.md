@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.9
+
+- Fix: Rolling in place when transitioning from sprint to roll with No Inertia enabled.
+  修复：开启取消惯性时，冲刺中触发翻滚偶尔原地播放动画不移动的问题。
+
 ## v1.0.8
 
 - Fast Save & Wake: Speed up save point interaction and wake-up sequence.
