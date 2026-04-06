@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.0.9")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.1.0")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -216,6 +216,18 @@ namespace MasaickerToolbox
     {
         static bool Prefix(GaleLogicOne __instance)
         {
+            // 检测主动跳跃：刚进入空中状态且速度向上 = 从地面起跳
+            if (__instance.velocity.y > 0f)
+            {
+                float timeSinceGrounded = Time.time - JumpState.lastGroundedTime;
+                if (timeSinceGrounded < 0.1f) // 刚离开地面
+                {
+                    JumpState.leftGroundByJump = true;
+                    if (Plugin.DebugLog.Value)
+                        Plugin.Log.LogInfo($"[Coyote] Active jump detected! vel.y={__instance.velocity.y:F2}");
+                }
+            }
+
             // 土狼时间：刚离地且非主动跳跃，窗口内按跳跃则执行跳跃
             if (Plugin.CoyoteTimeEnabled.Value
                 && !JumpState.leftGroundByJump
