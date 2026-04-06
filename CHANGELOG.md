@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.0
+
+- Fix: Active jump incorrectly triggering Coyote Time.
+  修复：主动跳跃触发土狼时间的问题。
+
 ## v1.0.9
 
 - Fix: Rolling in place when transitioning from sprint to roll with No Inertia enabled.
