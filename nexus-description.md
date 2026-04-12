@@ -17,7 +17,8 @@ Skip the startup animation of aerial attacks for faster hit confirmation. Defaul
 Hold the sprint key to auto re-activate sprint after interruptions (attacks, rolls, landing, etc.). No need to release and re-press. Includes skid-to-turn: pressing the opposite direction during sprint plays the skid animation, then automatically sprints in the new direction.  按住冲刺键即可在被打断后自动重新冲刺（攻击、翻滚、落地等）。无需松开再按。附带滑停转向：冲刺中按反方向播放滑停动画后自动转向继续冲刺。  Default: ON / 默认：开启[*][b]Drop Through Held / 长按穿透平台[/b]
 Hold down+jump to continuously fall through drop-through platforms instead of landing on each one. Release to stop.  按住下+跳可连续穿过可下跳的平台，无需每层重新操作。松手即停。  Default: OFF / 默认：关闭[*][b]Hover Grab / 悬浮改键[/b]
 Use Grab key instead of Jump to activate and maintain hover (rocket boots) mid-air. Prevents conflict with Jump Buffer — no more accidental hover when buffering a jump near landing.  空中使用抓取键替代跳跃键触发和维持悬浮（火箭靴）。避免与跳跃缓冲冲突——落地前缓冲跳跃不再误触悬浮。  Default: ON / 默认：开启[*][b]Leap Break / 冲刺跳脱离[/b]
-Press opposite direction during sprint jump to immediately exit to normal air state, regaining full aerial control.  冲刺跳空中按反方向立即切换为普通空中状态，恢复全部空中操控。  Default: OFF / 默认：关闭[*][b]Fast Save & Wake / 加速存档与起床[/b]
+Press opposite direction during sprint jump to immediately exit to normal air state, regaining full aerial control.  冲刺跳空中按反方向立即切换为普通空中状态，恢复全部空中操控。  Default: OFF / 默认：关闭[*][b]Javelin Recovery Time / 音速矛后摇时间[/b]
+Configurable recovery time after throwing javelin. Reduces the delay before you can act again after a throw. Default 0.1s (vanilla: 0.3s).  可配置投掷音速矛后的恢复时间，缩短投掷后的操作间隔。默认0.1秒（原版0.3秒）。[*][b]Fast Save & Wake / 加速存档与起床[/b]
 Speed up save point interaction and wake-up sequence.  加快存档速度，加快起床速度。  Default: ON / 默认：开启[/list]
 
 [quote]All features are enabled by default and can be toggled or tuned individually in the BepInEx config file.

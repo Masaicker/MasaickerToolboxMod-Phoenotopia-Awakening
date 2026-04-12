@@ -56,6 +56,10 @@
   - 冲刺跳空中按反方向立即切换为普通空中状态，恢复全部空中操控。
   - Default: `OFF` / 默认：关闭
 
+- **Javelin Recovery Time / 音速矛后摇时间**
+  - Configurable recovery time after throwing javelin. Reduces the delay before you can act again after a throw. Default `0.1s` (vanilla: `0.3s`).
+  - 可配置投掷音速矛后的恢复时间，缩短投掷后的操作间隔。默认0.1秒（原版0.3秒）。
+
 - **Fast Save & Wake / 加速存档与起床**
   - Speed up save point interaction and wake-up sequence.
   - 加快存档速度，加快起床速度。

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.1.0")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.1.1")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
@@ -25,6 +25,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<bool> HoverGrabEnabled;
         public static ConfigEntry<bool> LeapBreakEnabled;
         public static ConfigEntry<bool> FastSaveWakeEnabled;
+        public static ConfigEntry<float> JavelinRecoveryTime;
 
         private void Awake()
         {
@@ -113,6 +114,12 @@ namespace MasaickerToolbox
                 "FastSaveWake",
                 true,
                 "Fast Save & Wake - Speed up save animation and wake-up sequence - 快速存档与起床（加速存档动画和起床流程）");
+
+            JavelinRecoveryTime = Config.Bind(
+                "Combat",
+                "JavelinRecoveryTime",
+                0.1f,
+                "Javelin throw recovery time in seconds (vanilla: 0.3, min: 0) - 音速矛投掷后摇时间（原版0.3秒，最小可设为0）");
 
             var harmony = new Harmony("Mhz.masaickertoolbox");
             harmony.PatchAll();
@@ -655,6 +662,27 @@ namespace MasaickerToolbox
                 __instance._wait_time = 999f;
                 // 起床跳起（与床上起床行为统一）
                 __instance.velocity.y = __instance.jump_velocity;
+            }
+        }
+    }
+
+    // 音速矛投掷后摇缩短：将原版 0.3 秒等待替换为可配置值
+    [HarmonyPatch(typeof(GaleLogicOne), nameof(GaleLogicOne._STATE_PutToolAway))]
+    class JavelinRecoveryPatch
+    {
+        static void Postfix(GaleLogicOne __instance)
+        {
+            float recovery = Plugin.JavelinRecoveryTime.Value;
+            if (recovery >= 0.3f) return;
+
+            if (__instance._wait_time > recovery && __instance._wait_time <= 0.3f)
+            {
+                if (__instance._mover2.collision_info.below)
+                    __instance._GoToState(GaleLogicOne.GALE_STATE.DEFAULT);
+                else if (__instance._is_sprinting)
+                    __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR_LEAPING_STATE);
+                else
+                    __instance._GoToState(GaleLogicOne.GALE_STATE.IN_AIR);
             }
         }
     }

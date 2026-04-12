@@ -3,9 +3,9 @@
     <PropertyGroup>
         <TargetFramework>net35</TargetFramework>
         <Nullable>disable</Nullable>
-        <Version>1.1.0</Version>
-        <AssemblyVersion>1.1.0</AssemblyVersion>
-        <FileVersion>1.1.0</FileVersion>
+        <Version>1.1.1</Version>
+        <AssemblyVersion>1.1.1</AssemblyVersion>
+        <FileVersion>1.1.1</FileVersion>
         <Product>MasaickerToolbox</Product>
         <Company>MHZ</Company>
         <Copyright>Copyright © 2026 Masaicker</Copyright>

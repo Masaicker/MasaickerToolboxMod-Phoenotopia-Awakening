@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.1.1
+
+- Javelin Recovery Time: Configurable recovery time after throwing javelin (vanilla: 0.3s, default: 0.1s, min: 0).
+  音速矛后摇时间：可配置投掷音速矛后的恢复时间（原版0.3秒，默认0.1秒，最小可设为0）。
+
 ## v1.1.0
 
 - Fix: Active jump incorrectly triggering Coyote Time.
