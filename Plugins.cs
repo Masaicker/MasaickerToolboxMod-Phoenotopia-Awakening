@@ -7,14 +7,13 @@ using UnityEngine;
 
 namespace MasaickerToolbox
 {
-    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.1.1")]
+    [BepInPlugin("Mhz.masaickertoolbox", "MasaickerToolbox", "1.1.2")]
     public class Plugin : BaseUnityPlugin
     {
         internal static ManualLogSource Log;
         public static ConfigEntry<bool> NoInertiaEnabled;
         public static ConfigEntry<bool> JumpBufferEnabled;
         public static ConfigEntry<float> JumpBufferWindow;
-        public static ConfigEntry<bool> DropThroughBufferEnabled;
         public static ConfigEntry<bool> CoyoteTimeEnabled;
         public static ConfigEntry<float> CoyoteTimeWindow;
         public static ConfigEntry<bool> DebugLog;
@@ -42,19 +41,13 @@ namespace MasaickerToolbox
                 "Jump",
                 "JumpBuffer",
                 true,
-                "Jump Buffer - Queue jump input before landing, auto-jump on touchdown - 跳跃输入缓冲（着地前按跳跃，着地瞬间自动跳）");
+                "Jump Buffer - Queue jump input before landing, auto-jump on touchdown. Includes Drop Through Buffer: if holding down+jump before landing on a one-way platform, drops through instead of jumping. Ineffective when Drop Through Held is enabled - 跳跃输入缓冲（着地前按跳跃，着地瞬间自动跳。含下跳缓冲：落地前按住下+跳，落到单向平台时优先下穿而非跳跃。开启长按穿透时此功能无效）");
 
             JumpBufferWindow = Config.Bind(
                 "Jump",
                 "JumpBufferWindow",
                 0.1f,
                 "Jump Buffer Window (seconds) - 跳跃缓冲窗口（秒）");
-
-            DropThroughBufferEnabled = Config.Bind(
-                "Jump",
-                "DropThroughBuffer",
-                true,
-                "Drop Through Buffer - Buffer down+jump before landing to drop through one-way platforms instead of jumping - 下跳缓冲（落地前按下+跳，落到可下跳平台时优先下穿而不是缓冲跳）");
 
             HoverGrabEnabled = Config.Bind(
                 "Jump",
@@ -108,7 +101,7 @@ namespace MasaickerToolbox
                 "General",
                 "DropThroughHeld",
                 false,
-                "Drop Through Held - Hold down+jump to continuously fall through drop-through platforms - 长按穿透平台（按住下+跳连续穿过可下跳的平台）");
+                "Drop Through Held - Hold down+jump mid-air to continuously fall through platforms. Overrides Drop Through Buffer from Jump Buffer - 长按穿透平台（空中按住下+跳连续穿过单向平台。开启后会覆盖跳跃缓冲中的下跳缓冲功能）");
 
             LeapBreakEnabled = Config.Bind(
                 "General",
@@ -150,7 +143,7 @@ namespace MasaickerToolbox
 
         public static bool HasBufferedDropThroughIntent(float timeSinceJump)
         {
-            return Plugin.DropThroughBufferEnabled.Value
+            return Plugin.JumpBufferEnabled.Value
                 && timeSinceJump <= Plugin.JumpBufferWindow.Value
                 && Time.time - lastDownHeldTime <= Plugin.JumpBufferWindow.Value;
         }
@@ -166,16 +159,11 @@ namespace MasaickerToolbox
             if (!HasBufferedDropThroughIntent(timeSinceJump))
                 return false;
 
-            ClearJumpAndDropBuffers();
-
-            leftGroundByJump = false;
             if (!g._mover2.PerformLedgeDrop())
-            {
-                g._FailLedgeDrop();
-                if (Plugin.DebugLog.Value)
-                    Plugin.Log.LogInfo("[DropThroughBuffer] Failed, consumed buffered jump! timeSinceJump=" + timeSinceJump.ToString("F3"));
-                return true;
-            }
+                return false;
+
+            ClearJumpAndDropBuffers();
+            leftGroundByJump = false;
 
             PT2.sound_g.PlayGlobalCommonSfx(19, 1f, GL.M_RandomPitch(), 1);
             if (Plugin.DebugLog.Value)
@@ -202,7 +190,7 @@ namespace MasaickerToolbox
     {
         static void Postfix(ControlAdapter __instance)
         {
-            if (Plugin.DropThroughBufferEnabled.Value && JumpState.IsHoldingDown(__instance))
+            if (Plugin.JumpBufferEnabled.Value && JumpState.IsHoldingDown(__instance))
                 JumpState.lastDownHeldTime = Time.time;
 
             if (Plugin.JumpBufferEnabled.Value && __instance.JUMP_PRESSED)

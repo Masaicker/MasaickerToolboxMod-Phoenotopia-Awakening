@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## v1.1.2
 
-- Drop Through Buffer: Buffer down+jump before landing as a drop-through attempt. Drop-through platforms are passed through; solid ground consumes the buffered jump and plays vanilla failed drop feedback.
-  下跳缓冲：落地前预输入下+跳会作为下平台尝试。可下跳平台会下穿；普通地面会消耗跳跃缓冲并播放原版失败反馈。
+- Drop Through Buffer (built into Jump Buffer): Buffer down+jump before landing on a one-way platform to drop through instead of jumping. On solid ground, the jump buffer is preserved and triggers normally. Ineffective when Drop Through Held is enabled.
+  下跳缓冲（内置于跳跃缓冲）：落地前按下+跳，落到单向平台时优先下穿而非跳跃。落到实体地面时保留跳跃缓冲正常触发。开启长按穿透时此功能无效。
+- Fix: Drop Through Buffer no longer consumes jump buffer on solid ground.
+  修复：下跳缓冲不再在实体地面上吞掉跳跃缓冲。
 
 ## v1.1.1
 
