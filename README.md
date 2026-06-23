@@ -13,6 +13,11 @@
   - 在落地前稍早按下跳跃键，着地瞬间自动执行跳跃，不再吞输入。
   - Default window: `0.1s` / 默认窗口：0.1秒
 
+- **Drop Through Buffer / 下跳缓冲**
+  - Press down+jump slightly before landing to buffer a drop-through attempt. On drop-through platforms it drops through; on solid ground it plays the vanilla failed drop feedback instead of jumping.
+  - 在落地前稍早按下下+跳，会缓冲一次下平台尝试。落到可下跳平台时下穿；落到普通地面时播放原版失败反馈，而不是触发跳跃。
+  - Default: `ON` / 默认：开启
+
 - **Coyote Time / 土狼时间**
   - Walk off a ledge and you still have a brief moment to jump. Only triggers when passively walking off — not after an intentional jump.
   - 走下平台边缘后仍有极短时间可以跳跃。仅在被动离地时生效，主动跳跃不会触发。

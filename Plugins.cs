@@ -14,6 +14,7 @@ namespace MasaickerToolbox
         public static ConfigEntry<bool> NoInertiaEnabled;
         public static ConfigEntry<bool> JumpBufferEnabled;
         public static ConfigEntry<float> JumpBufferWindow;
+        public static ConfigEntry<bool> DropThroughBufferEnabled;
         public static ConfigEntry<bool> CoyoteTimeEnabled;
         public static ConfigEntry<float> CoyoteTimeWindow;
         public static ConfigEntry<bool> DebugLog;
@@ -48,6 +49,12 @@ namespace MasaickerToolbox
                 "JumpBufferWindow",
                 0.1f,
                 "Jump Buffer Window (seconds) - 跳跃缓冲窗口（秒）");
+
+            DropThroughBufferEnabled = Config.Bind(
+                "Jump",
+                "DropThroughBuffer",
+                true,
+                "Drop Through Buffer - Buffer down+jump before landing to drop through one-way platforms instead of jumping - 下跳缓冲（落地前按下+跳，落到可下跳平台时优先下穿而不是缓冲跳）");
 
             HoverGrabEnabled = Config.Bind(
                 "Jump",
@@ -131,9 +138,50 @@ namespace MasaickerToolbox
     public static class JumpState
     {
         public static float lastJumpPressTime = -1f;
+        public static float lastDownHeldTime = -1f;
         public static float lastGroundedTime = -1f;
         public static bool leftGroundByJump = false;
         public static bool leftGroundFromSprint = false;
+
+        public static bool IsHoldingDown(ControlAdapter c)
+        {
+            return c.UP_DOWN_AXIS <= -0.95f || c.CROUCH_HELD;
+        }
+
+        public static bool HasBufferedDropThroughIntent(float timeSinceJump)
+        {
+            return Plugin.DropThroughBufferEnabled.Value
+                && timeSinceJump <= Plugin.JumpBufferWindow.Value
+                && Time.time - lastDownHeldTime <= Plugin.JumpBufferWindow.Value;
+        }
+
+        public static void ClearJumpAndDropBuffers()
+        {
+            lastJumpPressTime = -1f;
+            lastDownHeldTime = -1f;
+        }
+
+        public static bool TryBufferedDropThrough(GaleLogicOne g, float timeSinceJump)
+        {
+            if (!HasBufferedDropThroughIntent(timeSinceJump))
+                return false;
+
+            ClearJumpAndDropBuffers();
+
+            leftGroundByJump = false;
+            if (!g._mover2.PerformLedgeDrop())
+            {
+                g._FailLedgeDrop();
+                if (Plugin.DebugLog.Value)
+                    Plugin.Log.LogInfo("[DropThroughBuffer] Failed, consumed buffered jump! timeSinceJump=" + timeSinceJump.ToString("F3"));
+                return true;
+            }
+
+            PT2.sound_g.PlayGlobalCommonSfx(19, 1f, GL.M_RandomPitch(), 1);
+            if (Plugin.DebugLog.Value)
+                Plugin.Log.LogInfo("[DropThroughBuffer] Triggered! timeSinceJump=" + timeSinceJump.ToString("F3"));
+            return true;
+        }
 
         // 冲刺跳公共逻辑：体力消耗、粒子、音效、状态切换
         public static void DoSprintJump(GaleLogicOne g)
@@ -154,6 +202,9 @@ namespace MasaickerToolbox
     {
         static void Postfix(ControlAdapter __instance)
         {
+            if (Plugin.DropThroughBufferEnabled.Value && JumpState.IsHoldingDown(__instance))
+                JumpState.lastDownHeldTime = Time.time;
+
             if (Plugin.JumpBufferEnabled.Value && __instance.JUMP_PRESSED)
             {
                 JumpState.lastJumpPressTime = Time.time;
@@ -272,6 +323,9 @@ namespace MasaickerToolbox
                 && __instance._mover2.collision_info.below)
             {
                 float timeSinceJump = Time.time - JumpState.lastJumpPressTime;
+                if (JumpState.TryBufferedDropThrough(__instance, timeSinceJump))
+                    return false;
+
                 if (timeSinceJump <= Plugin.JumpBufferWindow.Value)
                 {
                     JumpState.lastJumpPressTime = -1f;
@@ -337,6 +391,9 @@ namespace MasaickerToolbox
             if (landed)
             {
                 float timeSinceJump = Time.time - JumpState.lastJumpPressTime;
+                if (JumpState.TryBufferedDropThrough(__instance, timeSinceJump))
+                    return false;
+
                 if (timeSinceJump <= Plugin.JumpBufferWindow.Value)
                 {
                     JumpState.lastJumpPressTime = -1f;
@@ -399,6 +456,9 @@ namespace MasaickerToolbox
             if (__instance._wait_time > 0.05f && __instance._mover2.collision_info.below)
             {
                 float timeSinceJump = Time.time - JumpState.lastJumpPressTime;
+                if (JumpState.TryBufferedDropThrough(__instance, timeSinceJump))
+                    return false;
+
                 if (timeSinceJump <= Plugin.JumpBufferWindow.Value)
                 {
                     JumpState.lastJumpPressTime = -1f;
