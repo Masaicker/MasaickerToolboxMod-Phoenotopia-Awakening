@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Drop Through Buffer: Buffer down+jump before landing as a drop-through attempt. Drop-through platforms are passed through; solid ground consumes the buffered jump and plays vanilla failed drop feedback.
+  下跳缓冲：落地前预输入下+跳会作为下平台尝试。可下跳平台会下穿；普通地面会消耗跳跃缓冲并播放原版失败反馈。
+
 ## v1.1.1
 
 - Javelin Recovery Time: Configurable recovery time after throwing javelin (vanilla: 0.3s, default: 0.1s, min: 0).
